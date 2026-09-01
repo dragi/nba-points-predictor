@@ -1,7 +1,8 @@
-"""Train and evaluate points-prediction models on the engineered feature table."""
+"""Train and evaluate points-prediction models, then persist the best one."""
 
 import os
 
+import joblib
 import pandas as pd
 from sklearn.ensemble import RandomForestRegressor
 from sklearn.linear_model import LinearRegression
@@ -11,6 +12,8 @@ from features import FEATURE_COLUMNS, TARGET_COLUMN
 
 PROCESSED_DATA_DIR = os.path.join(os.path.dirname(__file__), "..", "data", "processed")
 TRAINING_DATA_PATH = os.path.join(PROCESSED_DATA_DIR, "training_data.csv")
+MODEL_DIR = os.path.join(os.path.dirname(__file__), "..", "models")
+MODEL_PATH = os.path.join(MODEL_DIR, "model.pkl")
 TEST_FRACTION = 0.2
 RANDOM_STATE = 42
 
@@ -28,7 +31,7 @@ def time_split(df, test_fraction=TEST_FRACTION):
 
 
 def build_models():
-    """Return the models to train, keyed by display name."""
+    """Return the candidate models, keyed by display name."""
     return {
         "Linear regression": LinearRegression(),
         "Random forest": RandomForestRegressor(
@@ -45,18 +48,32 @@ def evaluate(model, X_test, y_test):
     return mae, rmse
 
 
+def save_model(model, path=MODEL_PATH):
+    """Persist a fitted model to disk with joblib."""
+    os.makedirs(os.path.dirname(path), exist_ok=True)
+    joblib.dump({"model": model, "feature_columns": FEATURE_COLUMNS}, path)
+
+
 def main():
-    """Train each model on the time-based split and print a metrics comparison."""
+    """Compare models on a time split, then refit the best on all games and save it."""
     df = load_training_data()
     train_df, test_df = time_split(df)
     X_train, y_train = train_df[FEATURE_COLUMNS], train_df[TARGET_COLUMN]
     X_test, y_test = test_df[FEATURE_COLUMNS], test_df[TARGET_COLUMN]
 
     print(f"Train games: {len(train_df)}  Test games: {len(test_df)}")
+    scores = {}
     for name, model in build_models().items():
         model.fit(X_train, y_train)
         mae, rmse = evaluate(model, X_test, y_test)
+        scores[name] = mae
         print(f"{name:<20} MAE: {mae:.2f}  RMSE: {rmse:.2f}")
+
+    best_name = min(scores, key=scores.get)
+    best_model = build_models()[best_name]
+    best_model.fit(df[FEATURE_COLUMNS], df[TARGET_COLUMN])
+    save_model(best_model)
+    print(f"Saved {best_name} (retrained on all {len(df)} games) to {MODEL_PATH}")
 
 
 if __name__ == "__main__":
