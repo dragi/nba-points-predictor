@@ -21,12 +21,12 @@ def add_matchup_info(df):
     return df
 
 
-def add_rest_days(df, default_rest=7):
+def add_rest_days(df, default_rest=7, max_rest=10):
     """Days since each player's previous game, plus a back-to-back flag."""
     df = df.sort_values(["PLAYER_ID", "GAME_DATE"]).copy()
     prev_date = df.groupby("PLAYER_ID")["GAME_DATE"].shift(1)
     rest = (df["GAME_DATE"] - prev_date).dt.days
-    df["REST_DAYS"] = rest.fillna(default_rest)
+    df["REST_DAYS"] = rest.fillna(default_rest).clip(upper=max_rest)
     df["IS_BACK_TO_BACK"] = df["REST_DAYS"] <= 1
     return df
 
