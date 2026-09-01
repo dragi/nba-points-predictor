@@ -1,0 +1,18 @@
+# Python
+__pycache__/
+*.pyc
+.venv/
+venv/
+*.egg-info/
+
+# Data (regenerable via src/fetch_data.py and src/features.py)
+data/raw/
+data/processed/
+
+# Local scratch / planning notes
+NOTES.md
+.scratch/
+
+# OS / editor
+.DS_Store
+.vscode/
