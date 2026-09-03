@@ -45,10 +45,10 @@ Current results on ~51k player-games (80/20 time split):
 
 Linear regression wins narrowly and is the model shipped in `models/model.pkl`.
 
-**Prediction.** `src/predict.py` loads the saved model and the engineered game
-table, derives a player's current form from their most recent games, looks up the
-chosen opponent's latest defensive number, and returns the predicted points
-(floored at zero).
+**Prediction.** `src/predict.py` loads the saved model and a compact game table
+(`data/history.csv.gz`, the few columns the app needs), derives a player's current
+form from their most recent games, looks up the chosen opponent's latest defensive
+number, and returns the predicted points (floored at zero).
 
 ## Project layout
 
@@ -58,15 +58,18 @@ chosen opponent's latest defensive number, and returns the predicted points
 ├── src/
 │   ├── fetch_data.py     # nba_api pulls -> data/raw/
 │   ├── features.py       # feature engineering
-│   ├── build_dataset.py  # runs fetch + features -> data/processed/training_data.csv
+│   ├── build_dataset.py  # runs fetch + features -> training table + data/history.csv.gz
 │   ├── train.py          # trains, evaluates, saves the model
 │   └── predict.py        # loads the model, makes a single prediction
+├── .streamlit/config.toml
 ├── models/model.pkl      # trained model (committed so the app works out of the box)
+├── data/history.csv.gz   # compact game table the app reads (committed)
 ├── tests/                # pytest suite over feature and prediction logic
 └── requirements.txt
 ```
 
-`data/` is regenerable and gitignored.
+The raw pulls and the full training table under `data/raw/` and `data/processed/`
+are regenerable and gitignored; only the compact `data/history.csv.gz` is committed.
 
 ## Setup
 
@@ -79,10 +82,10 @@ pip install -r requirements.txt
 
 ## Usage
 
-Rebuild the training data and model from scratch:
+Rebuild the data and model from scratch:
 
 ```
-python src/build_dataset.py   # fetch + engineer -> data/processed/training_data.csv
+python src/build_dataset.py   # fetch + engineer -> training table + data/history.csv.gz
 python src/train.py           # evaluate models, save models/model.pkl
 ```
 
@@ -91,6 +94,16 @@ Run the app:
 ```
 streamlit run app.py
 ```
+
+## Deploy
+
+The app runs on [Streamlit Community Cloud](https://streamlit.io/cloud) for free.
+`models/model.pkl` and `data/history.csv.gz` are committed, so no data pull or
+training happens at deploy time.
+
+1. Push the repo to GitHub.
+2. On Streamlit Community Cloud, create an app pointing at `app.py`.
+3. Set the Python version to 3.13 to match the pinned `requirements.txt`.
 
 ## Tests
 

@@ -1,7 +1,7 @@
-nba_api
-pandas
-numpy
-scikit-learn
-streamlit
-joblib
-pytest
+nba_api==1.11.4
+pandas==3.0.5
+numpy==2.5.2
+scikit-learn==1.9.0
+streamlit==1.62.0
+joblib==1.6.0
+pytest==9.1.1

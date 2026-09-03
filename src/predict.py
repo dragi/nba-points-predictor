@@ -6,8 +6,9 @@ import joblib
 import pandas as pd
 
 from features import FORM_WINDOWS
-from train import MODEL_PATH, TRAINING_DATA_PATH
+from train import MODEL_PATH
 
+HISTORY_PATH = os.path.join(os.path.dirname(__file__), "..", "data", "history.csv.gz")
 _STATS = ("PTS", "MIN", "FG_PCT")
 
 
@@ -16,8 +17,8 @@ def load_bundle(path=MODEL_PATH):
     return joblib.load(path)
 
 
-def load_history(path=TRAINING_DATA_PATH):
-    """Load the engineered game table used to derive recent form."""
+def load_history(path=HISTORY_PATH):
+    """Load the compact game table used to derive recent form."""
     return pd.read_csv(path, parse_dates=["GAME_DATE"]).sort_values("GAME_DATE")
 
 
